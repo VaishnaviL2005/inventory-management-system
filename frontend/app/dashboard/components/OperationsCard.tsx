@@ -1,6 +1,7 @@
 'use client';
 
 import { Package, Truck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface OperationsCardProps {
   type: 'receipt' | 'delivery';
@@ -21,11 +22,20 @@ export default function OperationsCard({
   waiting, 
   total 
 }: OperationsCardProps) {
+  const router = useRouter();
   const Icon = type === 'receipt' ? Package : Truck;
   const colorClass = type === 'receipt' 
     ? 'from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800' 
     : 'from-green-600 to-green-700 hover:from-green-700 hover:to-green-800';
   const iconColor = type === 'receipt' ? 'text-blue-600' : 'text-green-600';
+
+  const handleClick = () => {
+    if (type === 'receipt') {
+      router.push('/receipts');
+    } else {
+      router.push('/delivery');
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -37,7 +47,10 @@ export default function OperationsCard({
       </div>
       
       <div className="mb-6">
-        <button className={`w-full bg-gradient-to-r ${colorClass} text-white rounded-lg py-4 px-6 font-semibold text-lg transition-all shadow-md hover:shadow-lg`}>
+        <button 
+          onClick={handleClick}
+          className={`w-full bg-gradient-to-r ${colorClass} text-white rounded-lg py-4 px-6 font-semibold text-lg transition-all shadow-md hover:shadow-lg cursor-pointer`}
+        >
           {count} to {type === 'receipt' ? 'Receive' : 'Deliver'}
         </button>
       </div>
