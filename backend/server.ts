@@ -1,26 +1,40 @@
+console.log("Starting server.ts...");
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { ExpressAuth } from "@auth/express"
-import NeonAdapter from "@auth/neon-adapter"
-import Credentials from "@auth/express/providers/credentials"
-import { Pool } from "@neondatabase/serverless"
-import bcrypt from "bcryptjs"
+import dotenv from "dotenv";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+dotenv.config();
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Allow cookies from frontend
 app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
   }),
 );
+
+// Import routes
+import receiptRoutes from "./routes/receiptRoutes.js";
+
+app.use("/api/receipts", receiptRoutes);
+
+// Auth setup commented out temporarily to get server running
+// TODO: Fix @auth/neon-adapter ESM import issues
+/*
+import { createRequire } from "module";
+import { ExpressAuth } from "@auth/express";
+const requireModule = createRequire(import.meta.url);
+const NeonAdapter = requireModule("@auth/neon-adapter").default;
+const Credentials = requireModule("@auth/express/providers/credentials").default;
+import { Pool } from "@neondatabase/serverless"
+import bcrypt from "bcryptjs"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 
 app.use("/auth/*", ExpressAuth({
   providers: [
@@ -29,7 +43,7 @@ app.use("/auth/*", ExpressAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials: any) => {
         try {
           if (!credentials?.email || !credentials?.password) {
             return null
@@ -40,13 +54,13 @@ app.use("/auth/*", ExpressAuth({
           ])
           const user = result.rows[0]
 
-          if (!user || !user.password) {
+          if (!user || !user.password_hash) {
             return null
           }
 
           const isValid = await bcrypt.compare(
             credentials.password as string,
-            user.password
+            user.password_hash
           )
 
           if (!isValid) {
@@ -67,7 +81,8 @@ app.use("/auth/*", ExpressAuth({
     }),
   ],
   adapter: NeonAdapter(pool),
-  session: { strategy: "jwt" }, // Use JWT for session strategy with Credentials provider
+  session: { strategy: "jwt" },
 }));
+*/
 
 app.listen(5000, () => console.log("Backend running on 5000"));
