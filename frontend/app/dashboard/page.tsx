@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { Search, Bell, HelpCircle, Settings, User, Package, TrendingDown, Clock, CheckCircle, AlertTriangle, ArrowUp, ArrowDown, TrendingUp, Truck, Warehouse, FileText, Activity, BarChart3, Box, RefreshCw, type LucideIcon } from 'lucide-react';
+import { useDashboard } from '@/lib/hooks/useDashboard';
 
 // Type Definitions
 interface KPIData {
   label: string;
-  value: string;
+  value: string | number;
   change: string;
   trend: 'up' | 'down' | 'neutral';
   period: string;
@@ -17,8 +18,8 @@ interface RecentActivity {
   action: string;
   user: string;
   time: string;
-  icon: LucideIcon;
-  color: string;
+  icon?: LucideIcon;
+  color?: string;
 }
 
 interface Alert {
@@ -31,7 +32,7 @@ interface Alert {
 
 interface WarehouseData {
   name: string;
-  stock: string;
+  stock: string | number;
   lowStock: number;
   operations: number;
   status: 'normal' | 'high' | 'low';
@@ -51,45 +52,37 @@ interface NavItem {
 }
 
 export default function Dashboard() {
+  const { data, isLoading, error } = useDashboard();
   const [activeNav, setActiveNav] = useState<string>('dashboard');
 
-  // Sample data with proper typing
-  const kpiData: KPIData[] = [
-    { label: 'Total Stock Count', value: '45,892', change: '+12%', trend: 'up', period: 'vs last month' },
-    { label: 'Low Stock Items', value: '23', change: '-5%', trend: 'down', period: 'vs last week' },
-    { label: 'Pending Receipts', value: '18', change: '+3', trend: 'up', period: 'Today' },
-    { label: 'Pending Deliveries', value: '34', change: '+8', trend: 'up', period: 'Today' },
-    { label: 'Internal Transfers', value: '12', change: '0', trend: 'neutral', period: 'In Progress' },
-    { label: 'Adjustments Pending', value: '7', change: '-2', trend: 'down', period: 'Awaiting Approval' },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  const recentActivity: RecentActivity[] = [
-    { type: 'receipt', action: 'Receipt #R-2845 validated', user: 'John Smith', time: '2 min ago', icon: Package, color: 'bg-green-100 text-green-600' },
-    { type: 'delivery', action: 'Delivery #D-1923 completed', user: 'Sarah Lee', time: '8 min ago', icon: Truck, color: 'bg-blue-100 text-blue-600' },
-    { type: 'transfer', action: 'Transfer #T-5612 scheduled', user: 'Mike Johnson', time: '15 min ago', icon: RefreshCw, color: 'bg-purple-100 text-purple-600' },
-    { type: 'adjustment', action: 'Stock adjustment performed', user: 'Admin', time: '23 min ago', icon: FileText, color: 'bg-orange-100 text-orange-600' },
-    { type: 'alert', action: 'Low stock alert triggered', user: 'System', time: '35 min ago', icon: AlertTriangle, color: 'bg-red-100 text-red-600' },
-  ];
+  if (error || !data) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-red-600">Error loading dashboard: {error}</div>
+      </div>
+    );
+  }
 
-  const alerts: Alert[] = [
-    { sku: 'SKU-4892', product: 'Industrial Bearing XL', location: 'Warehouse A', priority: 'high', issue: 'Out of Stock' },
-    { sku: 'SKU-2341', product: 'Steel Bolt M12', location: 'Warehouse B', priority: 'medium', issue: 'Low Stock (12 units)' },
-    { sku: 'SKU-7823', product: 'Hydraulic Pump', location: 'Warehouse C', priority: 'high', issue: 'Receipt Overdue (3 days)' },
-  ];
+  const { kpis: kpiData, recentActivity, alerts, warehouses, fastMoving } = data;
 
-  const warehouses: WarehouseData[] = [
-    { name: 'Warehouse A', stock: '15,234', lowStock: 8, operations: 23, status: 'normal' },
-    { name: 'Warehouse B', stock: '18,922', lowStock: 12, operations: 34, status: 'high' },
-    { name: 'Warehouse C', stock: '11,736', lowStock: 3, operations: 15, status: 'normal' },
-  ];
-
-  const fastMoving: FastMovingItem[] = [
-    { name: 'Steel Pipes 2"', sku: 'SKU-1823', moved: 234, trend: '+23%' },
-    { name: 'Copper Wire Roll', sku: 'SKU-9273', moved: 189, trend: '+18%' },
-    { name: 'Bearing Set', sku: 'SKU-4561', moved: 156, trend: '+15%' },
-    { name: 'Valve Assembly', sku: 'SKU-7234', moved: 142, trend: '+12%' },
-    { name: 'Gasket Pack', sku: 'SKU-3498', moved: 128, trend: '+9%' },
-  ];
+  // Helper to map activity type to icon and color
+  const getActivityStyle = (type: string) => {
+    switch (type) {
+      case 'receipt': return { icon: Package, color: 'bg-green-100 text-green-600' };
+      case 'delivery': return { icon: Truck, color: 'bg-blue-100 text-blue-600' };
+      case 'transfer': return { icon: RefreshCw, color: 'bg-purple-100 text-purple-600' };
+      case 'adjustment': return { icon: FileText, color: 'bg-orange-100 text-orange-600' };
+      default: return { icon: AlertTriangle, color: 'bg-red-100 text-red-600' };
+    }
+  };
 
   const navItems: NavItem[] = [
     { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
@@ -114,7 +107,7 @@ export default function Dashboard() {
             <span className="font-semibold text-gray-900">InventoryMS</span>
           </div>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -122,11 +115,10 @@ export default function Dashboard() {
               <button
                 key={item.id}
                 onClick={() => setActiveNav(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeNav === item.id
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeNav === item.id
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 {item.label}
@@ -151,7 +143,7 @@ export default function Dashboard() {
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 ml-6">
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <Bell className="w-5 h-5 text-gray-600" />
@@ -190,9 +182,8 @@ export default function Dashboard() {
                 <div className="text-sm text-gray-600 mb-2">{kpi.label}</div>
                 <div className="flex items-end justify-between">
                   <div className="text-2xl font-bold text-gray-900">{kpi.value}</div>
-                  <div className={`flex items-center gap-1 text-sm font-medium ${
-                    kpi.trend === 'up' ? 'text-green-600' : kpi.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                  }`}>
+                  <div className={`flex items-center gap-1 text-sm font-medium ${kpi.trend === 'up' ? 'text-green-600' : kpi.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                    }`}>
                     {kpi.trend === 'up' && <ArrowUp className="w-4 h-4" />}
                     {kpi.trend === 'down' && <ArrowDown className="w-4 h-4" />}
                     {kpi.change}
@@ -213,7 +204,7 @@ export default function Dashboard() {
                   <h3 className="text-lg font-semibold text-gray-900">Receipts</h3>
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg py-4 px-6 font-semibold text-lg transition-all shadow-md hover:shadow-lg">
                   18 to Receive
@@ -244,7 +235,7 @@ export default function Dashboard() {
                   <h3 className="text-lg font-semibold text-gray-900">Deliveries</h3>
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <button className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg py-4 px-6 font-semibold text-lg transition-all shadow-md hover:shadow-lg">
                   34 to Deliver
@@ -283,10 +274,9 @@ export default function Dashboard() {
                       <span className="text-sm text-gray-600">{warehouse.stock} units</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          warehouse.status === 'high' ? 'bg-orange-500' : 'bg-green-500'
-                        }`}
+                      <div
+                        className={`h-2 rounded-full ${warehouse.status === 'high' ? 'bg-orange-500' : 'bg-green-500'
+                          }`}
                         style={{ width: `${Math.random() * 40 + 60}%` }}
                       ></div>
                     </div>
@@ -328,10 +318,10 @@ export default function Dashboard() {
               </div>
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {recentActivity.map((activity: RecentActivity, index: number) => {
-                  const Icon = activity.icon;
+                  const { icon: Icon, color } = getActivityStyle(activity.type);
                   return (
                     <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className={`p-2 rounded-lg ${activity.color}`}>
+                      <div className={`p-2 rounded-lg ${color}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -356,18 +346,16 @@ export default function Dashboard() {
               {alerts.map((alert: Alert, index: number) => (
                 <div key={index} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      alert.priority === 'high' ? 'bg-red-500' : 'bg-orange-500'
-                    }`}></div>
+                    <div className={`w-2 h-2 rounded-full ${alert.priority === 'high' ? 'bg-red-500' : 'bg-orange-500'
+                      }`}></div>
                     <div>
                       <div className="font-medium text-gray-900">{alert.product}</div>
                       <div className="text-sm text-gray-600">{alert.sku} • {alert.location}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`text-sm font-medium ${
-                      alert.priority === 'high' ? 'text-red-600' : 'text-orange-600'
-                    }`}>{alert.issue}</span>
+                    <span className={`text-sm font-medium ${alert.priority === 'high' ? 'text-red-600' : 'text-orange-600'
+                      }`}>{alert.issue}</span>
                     <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                       View Details
                     </button>

@@ -3,29 +3,18 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
-async function login(loginId: string, password: string) {
-  // Backend connection disabled for now - just for UI preview
-  // Uncomment when backend is ready:
-  /*
-  const res = await fetch("http://localhost:5000/auth/login", {
+async function login(email: string, password: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ loginId, password }),
+    body: JSON.stringify({ email, password }),
   });
   return res.json();
-  */
-  
-  // Mock response for UI preview
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ error: "Backend not connected. This is a UI preview." });
-    }, 500);
-  });
 }
 
 export default function LoginPage() {
-  const [loginId, setLoginId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +24,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await login(loginId, password);
+      const result = await login(email, password);
       if (result?.error) {
         setError(result.error);
       } else {
@@ -69,18 +58,18 @@ export default function LoginPage() {
             {/* Login ID Input */}
             <div>
               <label
-                htmlFor="loginId"
+                htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Login ID
+                Email
               </label>
               <input
-                id="loginId"
-                type="text"
-                value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter your login ID"
+                placeholder="Enter your email"
                 required
               />
             </div>

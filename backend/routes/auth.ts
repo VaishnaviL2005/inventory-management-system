@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import pool from "../db";
-import { signToken } from "../utils/jwt";
+import pool from "../db.js";
+import { signToken } from "../utils/jwt.js";
 
 const router = express.Router();
 

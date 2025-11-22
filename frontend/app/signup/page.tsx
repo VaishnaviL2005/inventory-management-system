@@ -3,44 +3,32 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
-async function signup(loginId: string, email: string, password: string) {
-  // Backend connection disabled for now - just for UI preview
-  // Uncomment when backend is ready:
-  /*
-  const res = await fetch("http://localhost:5000/auth/signup", {
+async function signup(name: string, email: string, password: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ loginId, email, password }),
+    body: JSON.stringify({ name, email, password }),
   });
   return res.json();
-  */
-  
-  // Mock response for UI preview
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ error: "Backend not connected. This is a UI preview." });
-    }, 500);
-  });
 }
 
 export default function SignupPage() {
-  const [loginId, setLoginId] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [reEnterPassword, setReEnterPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{
-    loginId?: string;
+    name?: string;
     email?: string;
     password?: string;
     reEnterPassword?: string;
     general?: string;
   }>({});
 
-  const validateLoginId = (id: string): string | undefined => {
-    if (id.length < 6 || id.length > 12) {
-      return "Login ID must be between 6 and 12 characters";
+  const validateName = (n: string): string | undefined => {
+    if (n.length < 2) {
+      return "Name must be at least 2 characters";
     }
     return undefined;
   };
@@ -63,14 +51,14 @@ export default function SignupPage() {
     setErrors({});
 
     // Validate all fields
-    const loginIdError = validateLoginId(loginId);
+    const nameError = validateName(name);
     const passwordError = validatePassword(password);
     const reEnterPasswordError =
       password !== reEnterPassword ? "Passwords do not match" : undefined;
 
-    if (loginIdError || passwordError || reEnterPasswordError) {
+    if (nameError || passwordError || reEnterPasswordError) {
       setErrors({
-        loginId: loginIdError,
+        name: nameError,
         password: passwordError,
         reEnterPassword: reEnterPasswordError,
       });
@@ -79,7 +67,7 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const result = await signup(loginId, email, password);
+      const result = await signup(name, email, password);
       if (result?.error) {
         if (result.error.includes("email") || result.error.includes("duplicate")) {
           setErrors({ email: "Email already exists" });
@@ -114,32 +102,31 @@ export default function SignupPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Login ID Input */}
+            {/* Name Input */}
             <div>
               <label
-                htmlFor="loginId"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Enter Login ID
+                Full Name
               </label>
               <input
-                id="loginId"
+                id="name"
                 type="text"
-                value={loginId}
+                value={name}
                 onChange={(e) => {
-                  setLoginId(e.target.value);
-                  if (errors.loginId) {
-                    setErrors((prev) => ({ ...prev, loginId: undefined }));
+                  setName(e.target.value);
+                  if (errors.name) {
+                    setErrors((prev) => ({ ...prev, name: undefined }));
                   }
                 }}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${
-                  errors.loginId ? "border-red-300" : "border-gray-300"
-                }`}
-                placeholder="6-12 characters"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${errors.name ? "border-red-300" : "border-gray-300"
+                  }`}
+                placeholder="Enter your full name"
                 required
               />
-              {errors.loginId && (
-                <p className="mt-1 text-sm text-red-600">{errors.loginId}</p>
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
               )}
             </div>
 
@@ -161,9 +148,8 @@ export default function SignupPage() {
                     setErrors((prev) => ({ ...prev, email: undefined }));
                   }
                 }}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${
-                  errors.email ? "border-red-300" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${errors.email ? "border-red-300" : "border-gray-300"
+                  }`}
                 placeholder="Enter your email"
                 required
               />
@@ -190,9 +176,8 @@ export default function SignupPage() {
                     setErrors((prev) => ({ ...prev, password: undefined }));
                   }
                 }}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${
-                  errors.password ? "border-red-300" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${errors.password ? "border-red-300" : "border-gray-300"
+                  }`}
                 placeholder="Max 8 chars, uppercase & lowercase"
                 required
               />
@@ -219,9 +204,8 @@ export default function SignupPage() {
                     setErrors((prev) => ({ ...prev, reEnterPassword: undefined }));
                   }
                 }}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${
-                  errors.reEnterPassword ? "border-red-300" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${errors.reEnterPassword ? "border-red-300" : "border-gray-300"
+                  }`}
                 placeholder="Re-enter your password"
                 required
               />
