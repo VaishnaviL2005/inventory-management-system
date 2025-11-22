@@ -17,7 +17,9 @@ app.use(
   }),
 );
 
+
 app.use("/auth", authRoutes);
+
 
 console.log("Attempting to start server...");
 const server = app.listen(6000, () => console.log("Backend running on 5000"));
